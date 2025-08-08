@@ -56,4 +56,10 @@ func LoadConfig() (*Config, error) {
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Could not load initial env variables")
 	}
+	mainConfig := &Config{}
+	err = k.Unmarshal("", mainConfig)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("could not unmarshal main config")
+	}
+	return mainConfig, nil
 }
