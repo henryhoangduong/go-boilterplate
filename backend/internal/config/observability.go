@@ -1,8 +1,11 @@
 package config
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
-type Observability struct {
+type ObservabilityConfig struct {
 	ServiceName  string             `koanf:"service_name" validate:"required"`
 	Environment  string             `koanf:"environment" validate:"required"`
 	Logging      LoggingConfig      `koanf:"logging" validate:"required"`
@@ -31,7 +34,7 @@ type HealthChecksConfig struct {
 }
 
 func DefaultObservabilityConfig() *Observability {
-	return &Observability{
+	return &ObservabilityConfig{
 		ServiceName: "alfred",
 		Environment: "development",
 		Logging: LoggingConfig{
@@ -52,4 +55,24 @@ func DefaultObservabilityConfig() *Observability {
 			Checks:   []string{"database", "redis"},
 		},
 	}
+}
+func (c *ObservabilityConfig) Validate() error {
+	if c.ServiceName == "" {
+		return fmt.Errorf("service_name is required")
+	}
+
+	// Validate log level
+	validLevels := map[string]bool{
+		"debug": true, "info": true, "warn": true, "error": true,
+	}
+	if !validLevels[c.Logging.Level] {
+		return fmt.Errorf("invalid logging level: %s (must be one of: debug, info, warn, error)", c.Logging.Level)
+	}
+
+	// Validate slow query threshold
+	if c.Logging.SlowQueryThreshold < 0 {
+		return fmt.Errorf("logging slow_query_threshold must be non-negative")
+	}
+
+	return nil
 }
